@@ -35,10 +35,15 @@ function to_string( tbl )
     end
 end
 
-function log(...)
-    local a = {}
-    for i, val in ... do
-        a[i] = to_string(val)
+function map(func, array)
+    local new_array = {}
+    for i,v in ipairs(array) do
+        new_array[i] = func(v)
     end
-    print(unpack(a))
+    return new_array
+end
+
+  
+function log(...)
+    print(to_string(...))
 end

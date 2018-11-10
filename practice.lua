@@ -29,9 +29,12 @@ function recog(sys)
         -- On each geomap, draws blue.
 
         -- When /map/ is geomap of box /bbox/:
-        -- WHEN(sys, you, "/1/ is geomap of bbox /2/",
-        
-        -- )
+        WHEN(sys, you, "/1/ is geomap of bbox /2/",
+            function (map, bbox)
+                print("WHEN", to_string(map), "is geomap of bbox", to_string(bbox))
+                WISH
+            end
+        )
 
         --     Wish (map) is highlighted "blue".
 

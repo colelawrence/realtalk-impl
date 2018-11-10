@@ -1,0 +1,10 @@
+[package]
+name = "imagination"
+version = "0.1.0"
+authors = ["Cole Lawrence <colelawr@gmail.com>"]
+
+[dependencies]
+
+[lib]
+name = "double_input"
+crate-type = ["dylib"]
