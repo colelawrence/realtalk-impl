@@ -128,6 +128,12 @@ pub extern "C" fn system_debug() {
 }
 
 #[no_mangle]
+pub extern "C" fn system_tests() {
+    let sys1a = Arc::clone(&sys1);
+    
+}
+
+#[no_mangle]
 // pub extern "C" fn test(source: *const c_char, dest: *mut c_char) -> size_t {
 pub extern "C" fn reverse_call(source: *const c_char) -> *mut c_char {
     let t1 = unsafe {
