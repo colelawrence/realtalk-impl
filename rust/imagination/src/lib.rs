@@ -99,8 +99,29 @@ impl System {
     pub fn register() {}
 }
 
+use std::ffi::CStr;
+use std::ffi::CString;
+use std::os::raw::c_char;
+
 #[no_mangle]
-pub extern "C" fn test(source: u8[]) -> Vec<u8> {
-    println!("Test print \"{:?}\"", source);
-    source
+pub extern "C" fn test_free(s: *mut c_char) {
+    unsafe { CString::from_raw(s); }
+}
+
+#[no_mangle]
+// pub extern "C" fn test(source: *const c_char, dest: *mut c_char) -> size_t {
+pub extern "C" fn test(source: *const c_char) -> *mut c_char {
+    let t1 = unsafe {
+        CStr::from_ptr(source)
+    };
+    println!("t1 {:?}", t1);
+    let res = reverse(t1.to_str().expect("valid utf8"));
+    let res_cstr = CString::new(res.as_bytes()).expect("no nul");
+    println!("cstr: {:?}", res_cstr);
+    // let res_ptr = res_cstr.into_raw();
+    res_cstr.into_raw()
+}
+
+fn reverse(src: &str) -> String {
+    src.chars().rev().collect::<String>()
 }

@@ -10,16 +10,23 @@ end
 
 ffi.cdef[[
 int32_t double_input(int32_t input);
-const char* test(const char *source);
+// const size_t test(const char *source, char *dest);
+char* test(const char *source);
+void test_free(char *source);
 ]]
 
 local lib = ffi.load('target/debug/libdouble_input.' .. ext)
 local double_input = lib.double_input
 local test = lib.test
+local test_free = lib.test_free
 
-local input = 4
-local output = double_input(input)
+local rec_cstr = test("Hello, world")
+local rec = ffi.string(rec_cstr)
+print("recc:", ffi.string(rec_cstr))
+test_free(rec_cstr)
+print("recc:", ffi.string(rec_cstr))
+print("rec:", rec)
 
+-- local input = 4
+-- local output = double_input(input)
 -- print(input .. " * 2 = " .. output)
-
-print("Received:", test("Hello, world"))
