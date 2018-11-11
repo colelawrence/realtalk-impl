@@ -1,10 +1,5 @@
 use std::collections::BTreeMap;
 
-#[no_mangle]
-pub extern "C" fn double_input(input: i32) -> i32 {
-    input * 2
-}
-
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub struct TemplateId(usize);
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
@@ -51,6 +46,7 @@ pub struct FactStatement {
     args: Vec<Value>,
 }
 
+#[derive(Debug)]
 pub struct System {
     name: String,
     // entities: Vec<EntityId>, // this should actually be entities of some kind I guess
@@ -97,15 +93,38 @@ impl System {
     }
 
     pub fn register() {}
+
+    pub fn new(name: &str) -> System {
+        System {
+            name: String::from(name),
+            facts: BTreeMap::new(),
+        }
+    }
 }
 
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::c_char;
+use std::sync::Arc;
+
+#[macro_use]
+extern crate lazy_static;
+
+lazy_static! {
+    static ref sys1: Arc<System> = {
+        Arc::new(System::new("Sys1"))
+    };
+}
 
 #[no_mangle]
 pub extern "C" fn reverse_free(s: *mut c_char) {
     unsafe { CString::from_raw(s); }
+}
+
+#[no_mangle]
+pub extern "C" fn system_debug() {
+    let sys1a = Arc::clone(&sys1);
+    println!("debug system: {:?}", sys1a)
 }
 
 #[no_mangle]

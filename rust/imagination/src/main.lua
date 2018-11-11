@@ -9,15 +9,15 @@ else
 end
 
 ffi.cdef[[
-int32_t double_input(int32_t input);
 char* reverse_call(const char *source);
 void reverse_free(char *source);
+void system_debug();
 ]]
 
-local lib = ffi.load('target/debug/libdouble_input.' .. ext)
-local double_input = lib.double_input
+local lib = ffi.load('target/debug/libmanage_facts.' .. ext)
 local reverse_call = lib.reverse_call
 local reverse_free = lib.reverse_free
+local system_debug = lib.system_debug
 
 function test()
     local input = "Hello, world yada ".. math.random(1000) .." boo booyada yada boo ".. math.random(1000) .." yada boo booyada yada boo " .. math.random(1000) .. " yada boo booyada yada boo booyada yada boo boo"
@@ -32,6 +32,7 @@ end
 
 
 while true do
+    system_debug()
     print("input number of cycles:")
     local n = io.read("*n")
     

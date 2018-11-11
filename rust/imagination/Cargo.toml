@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Cole Lawrence <colelawr@gmail.com>"]
 
 [dependencies]
+lazy_static = "1.2.0"
 
 [lib]
-name = "double_input"
+name = "manage_facts"
 crate-type = ["dylib"]
