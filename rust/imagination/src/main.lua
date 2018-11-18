@@ -11,15 +11,18 @@ end
 ffi.cdef[[
 char* reverse_call(const char *source);
 void reverse_free(char *source);
-void system_debug();
-void system_tests();
+void im_system_debug(void *system);
+void im_system_tests(void *system);
+void im_system_drop(void *system);
+void* im_system_new(const char *source);
 ]]
 
 local lib = ffi.load('target/debug/libmanage_facts.' .. ext)
 local reverse_call = lib.reverse_call
 local reverse_free = lib.reverse_free
-local system_debug = lib.system_debug
-local system_tests = lib.system_tests
+local im_system_debug = lib.im_system_debug
+local im_system_tests = lib.im_system_tests
+local im_system_drop = lib.im_system_drop
 
 function test()
     local input = "Hello, world yada ".. math.random(1000) .." boo booyada yada boo ".. math.random(1000) .." yada boo booyada yada boo " .. math.random(1000) .. " yada boo booyada yada boo booyada yada boo boo"
@@ -32,12 +35,14 @@ function test()
     -- print("rec:", rec)
 end
 
+local sys1 = lib.im_system_new("sys1")
+im_system_debug(sys1)
+print("running tests")
+im_system_tests(sys1)
+im_system_debug(sys1)
+im_system_drop(sys1)
 
 while true do
-    system_debug()
-    print("running tests")
-    system_tests()
-    system_debug()
     print("input number of cycles:")
     local n = io.read("*n")
     
