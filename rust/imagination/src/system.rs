@@ -169,6 +169,7 @@ mod goals {
         Str(String),
         Float(f64),
         List(Vec<Value>),
+        Var(Var),
     }
 
     impl Into<Value> for i64 {
@@ -216,7 +217,22 @@ mod goals {
     struct WhenBuilder {
         var: usize,
         vars: HashMap<String, Var>,
-        substitution: Substitution,
+        curr_template: String,
+        curr_value: Vec<Value>,
+        acc: Vec<Vec<Value>>,
+    }
+
+    impl WhenBuilder {
+        /// returns existing var of this identity or creates new var of the identity
+        fn var_of(&mut self, id: &str) -> Var {
+            if let Some(ref var) = self.vars.get(id) {
+                return Var(var.0);
+            }
+            self.var = self.var + 1;
+            let res = Var(self.var);
+            self.vars.insert(String::from(id), res.clone());
+            res
+        }
     }
 
     impl WhenBuilder {
@@ -224,7 +240,9 @@ mod goals {
             WhenBuilder {
                 var: 0,
                 vars: HashMap::new(),
-                substitution: vec![],
+                curr_template: String::new(),
+                curr_value: Vec::new(),
+                acc: Vec::new(),
             }
         }
     }
@@ -245,11 +263,33 @@ mod goals {
     }
 
     impl WhenMConsume for WhenBuilder {
-        fn append_capture(&mut self, id: &str) {}
-        fn append_pin<T: Into<Value>>(&mut self, value: T) {}
-        fn append_word(&mut self, word: &str) {}
-        fn and(&mut self) {}
-        fn then(self) -> Goal {
+        fn append_capture(&mut self, id: &str) {
+            self.curr_template.push_str("_ ");
+            let some_var = self.var_of(id);
+            self.curr_value.push(Value::Var(some_var));
+        }
+        fn append_pin<T: Into<Value>>(&mut self, value: T) {
+            self.curr_template.push_str("_ ");
+            self.curr_value.push(value.into());
+        }
+        fn append_word(&mut self, word: &str) {
+            self.curr_template.push_str(word);
+            self.curr_template.push(' ');
+        }
+        fn and(&mut self) {
+            self.curr_value.push(self.curr_template.as_str().into());
+            self.acc.push(self.curr_value.clone()); // move it over
+            self.curr_value = Vec::new(); // replace it
+            self.curr_template = String::new();
+        }
+        fn then(mut self) -> Goal {
+            self.curr_value.push(self.curr_template.into());
+            let prev_assoc = self.curr_value;
+            self.curr_value = Vec::new();
+            self.curr_template = String::new();
+            self.acc.push(prev_assoc);
+
+            println!("Accumulator: {:?}", self.acc);
             Box::new(|s| Box::new(iter::once(s.clone())))
         }
     }
@@ -274,41 +314,6 @@ mod goals {
             println!("Debug: {}", self.0);
             Box::new(|s| Box::new(iter::once(s.clone())))
         }
-    }
-
-    macro_rules! write_when {
-        ($w:expr, ) => (());
-
-        ($w:expr, $e:tt) => (write!($w, "({:?})", $e));
-
-        ($w:expr, , $($rest:tt)*) => {{
-            write!($w, "\nAND\n");
-            write_when!($w, $($rest)*);
-        }};
-
-        ($w:expr, : $fn:block) => {{
-            write!($w, "\nDo something");
-        }};
-
-        // ($w:expr, $tag:ident [ $($inner:tt)* ] $($rest:tt)*) => {{
-        //     write!($w, "<{}>", stringify!($tag));
-        //     write_when!($w, $($inner)*);
-        //     write!($w, "</{}>", stringify!($tag));
-        //     write_when!($w, $($rest)*);
-        // }};
-        ($w:expr, $word:ident $($rest:tt)*) => {{
-            write!($w, "{} ", stringify!($word));
-            write_when!($w, $($rest)*);
-        }};
-        ($w:expr, /$capture:ident/ $($rest:tt)*) => {{
-            write!($w, "{{{}}} ", stringify!($capture));
-            write_when!($w, $($rest)*);
-        }};
-        ($w:expr, ($pin:expr) $($rest:tt)*) => {{
-            // write_html!($w, $pin);
-            write!($w, "({:?}) ", $pin);
-            write_when!($w, $($rest)*);
-        }};
     }
 
     macro_rules! write_when_printer {
@@ -348,7 +353,7 @@ mod goals {
     macro_rules! when {
         ($($rest:tt)*) => {
             {
-                let mut when_printer = WhenPrinter::new();
+                let mut when_printer = WhenBuilder::new();
                 write_when_printer!(when_printer, $($rest)*)
             }
         };
