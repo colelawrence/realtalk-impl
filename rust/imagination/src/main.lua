@@ -42,6 +42,10 @@ im_system_tests(sys1)
 im_system_debug(sys1)
 im_system_drop(sys1)
 
+local empty_state = {}
+print("state")
+print(state)
+
 while true do
     print("input number of cycles:")
     local n = io.read("*n")
