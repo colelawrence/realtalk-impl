@@ -245,6 +245,16 @@ mod goals {
                 acc: Vec::new(),
             }
         }
+
+        /// close off current template in teh case of an `and` or `then`
+        fn delimit(&mut self) {
+            let template_length = self.curr_template.len();
+            self.curr_value
+                .push((&self.curr_template[..template_length - 1]).into());
+            self.acc.push(self.curr_value.clone()); // move it over
+            self.curr_value = Vec::new(); // replace it
+            self.curr_template = String::new();
+        }
     }
 
     struct WhenPrinter(String);
@@ -277,17 +287,10 @@ mod goals {
             self.curr_template.push(' ');
         }
         fn and(&mut self) {
-            self.curr_value.push(self.curr_template.as_str().into());
-            self.acc.push(self.curr_value.clone()); // move it over
-            self.curr_value = Vec::new(); // replace it
-            self.curr_template = String::new();
+            self.delimit();
         }
         fn then(mut self) -> Goal {
-            self.curr_value.push(self.curr_template.into());
-            let prev_assoc = self.curr_value;
-            self.curr_value = Vec::new();
-            self.curr_template = String::new();
-            self.acc.push(prev_assoc);
+            self.delimit();
 
             println!("Accumulator: {:?}", self.acc);
             Box::new(|s| Box::new(iter::once(s.clone())))
@@ -343,11 +346,23 @@ mod goals {
         ($w:expr, /$capture:ident/ $($rest:tt)*) => {{
             $w.append_capture(stringify!($capture));
             write_when_printer!($w, $($rest)*);
+            let $capture: Option<Value> = None; // this is supposed to do something for autocompletition...
         }};
         ($w:expr, ($pin:expr) $($rest:tt)*) => {{
             $w.append_pin($pin);
             write_when_printer!($w, $($rest)*);
         }};
+    }
+
+    struct Relation(String, Vec<Value>);
+
+    struct Context();
+
+    trait RelationPubSub {
+        fn when<F: Fn(Context, Vec<Value>)>(ctx: Context, capture: Vec<Relation>, listener: F);
+        fn claim(ctx: Context, values: Relation);
+        fn wish<F: Fn(Context, Vec<Value>)>(ctx: Context, capture: Vec<Relation>, listener: F);
+        fn to_know<F: Fn(Context, Relation)>(ctx: Context, capture: Vec<Relation>, listener: F);
     }
 
     macro_rules! when {
@@ -364,10 +379,12 @@ mod goals {
         // when!(page);
         let a = when!(/page/ is ("blue"));
 
-        let blue = "blues";
+        let blue = "blue";
         let when_out = when!(
         /page/ is highlighted (blue),
-        /page/ points ("up") at /target/: {
+        /page/ points ("up") at /target/ you know: {
+            ///  [[Var(Var(1)), Str("blue"), Str("_ is highlighted _")],
+            ///   [Var(Var(1)), Str("up"), Var(Var(2)), Str("_ points _ at _")]]
             println!("Hello world!");
         });
         println!("when_out: {:?}", when_out);

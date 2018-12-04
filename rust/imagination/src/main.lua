@@ -36,15 +36,22 @@ function test()
 end
 
 local sys1 = lib.im_system_new("sys1")
-im_system_debug(sys1)
-print("running tests")
-im_system_tests(sys1)
-im_system_debug(sys1)
-im_system_drop(sys1)
+-- im_system_debug(sys1)
+-- print("running tests")
+-- im_system_tests(sys1)
+-- im_system_debug(sys1)
+-- im_system_drop(sys1)
 
-local empty_state = {}
-print("state")
-print(state)
+matches = {{a = 1, {x = 1, y = 2}, 3}, {5, {x = 0, y = 0}}, {2, {x = 1, y = 2}, "yo yo yo"}}
+for _, match in ipairs(matches) do
+    a, b = unpack(match)
+    print(a, b)
+end
+
+
+-- local empty_state = {}
+-- print("state")
+-- print(state)
 
 while true do
     print("input number of cycles:")
